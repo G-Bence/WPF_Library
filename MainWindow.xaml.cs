@@ -74,8 +74,10 @@ namespace WPF_Library
 
         private void BuildScrollableVerticalSelector()
         {
-
-            _selectorListPanel = new StackPanel();
+            _selectorListPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical
+            };
 
             var sv = new ScrollViewer
             {
@@ -84,8 +86,25 @@ namespace WPF_Library
                 Content = _selectorListPanel
             };
 
+            void UpdateScrollViewerHeight()
+            {
+                if (VerticalSelector.ActualHeight > 0)
+                {
+                    sv.Height = Math.Max(0.0, VerticalSelector.ActualHeight - 4.0);
+                    sv.VerticalAlignment = VerticalAlignment.Stretch;
+                }
+                else
+                {
+                    sv.ClearValue(FrameworkElement.HeightProperty);
+                }
+            }
+
+            VerticalSelector.SizeChanged += (s, e) => UpdateScrollViewerHeight();
+
             VerticalSelector.Children.Clear();
             VerticalSelector.Children.Add(sv);
+
+            UpdateScrollViewerHeight();
         }
 
         private void ConfigureControls()
@@ -1092,13 +1111,11 @@ namespace WPF_Library
         private void BookSelectResetLB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_uiInternalChange) return;
-
             if (BookSelectResetLB.SelectedItem is BookItem selected)
             {
                 if (!BookSelectedResetLB.Items.OfType<BookItem>().Any(b => b.Id == selected.Id))
                     BookSelectedResetLB.Items.Add(selected);
 
-                BookSelectResetLB.Items.Remove(selected);
                 BookSelectResetLB.SelectedItem = null;
             }
         }
@@ -1106,14 +1123,9 @@ namespace WPF_Library
         private void BookSelectedResetLB_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_uiInternalChange) return;
-
             if (BookSelectedResetLB.SelectedItem is BookItem selected)
             {
                 BookSelectedResetLB.Items.Remove(selected);
-
-                if (!BookSelectResetLB.Items.OfType<BookItem>().Any(b => b.Id == selected.Id))
-                    BookSelectResetLB.Items.Add(selected);
-
                 BookSelectedResetLB.SelectedItem = null;
             }
         }
@@ -1156,7 +1168,7 @@ namespace WPF_Library
             }
 
             ShowInfo("Borrow reset successfully (book returned).");
-            RefreshResetBorrowBookSource();
+            OpenResetBorrowScreen();
         }
 
         private List<ReaderItem> GetReadersWithOverdues()
